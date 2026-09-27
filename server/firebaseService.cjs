@@ -5,11 +5,27 @@ const { getFirestore } = require('firebase-admin/firestore');
 
 // Initialize Firebase Admin if not already initialized
 if (getApps().length === 0) {
-  const serviceAccountPath = path.resolve(__dirname, '../serviceAccount.json');
-  const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-  initializeApp({
-    credential: cert(serviceAccount)
-  });
+  // Try env variables first (Vercel / production)
+  if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+    initializeApp({
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        // Vercel stores \n as literal \\n — fix it
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+      })
+    });
+  } else {
+    // Fallback to serviceAccount.json for local development
+    const serviceAccountPath = path.resolve(__dirname, '../serviceAccount.json');
+    if (!fs.existsSync(serviceAccountPath)) {
+      throw new Error('No Firebase credentials found. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY env vars or add serviceAccount.json');
+    }
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+    initializeApp({
+      credential: cert(serviceAccount)
+    });
+  }
 }
 
 const db = getFirestore();
