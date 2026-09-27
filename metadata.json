@@ -1,0 +1,6 @@
+{
+  "name": "Team Tournament",
+  "description": "8-Player 2v2 Random Team Tournament Bracket Generator and Manager",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
